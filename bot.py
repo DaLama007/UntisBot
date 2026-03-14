@@ -12,7 +12,7 @@ from selenium.webdriver.firefox.options import Options
 #set options for selenium browser
 options = Options()
 options.binary = r"C:\Users\Marwan\Desktop\Firefox.exe"
-options.headless = True
+#options.headless = True
 
 #set intents for discord bot
 intents = discord.Intents.default()
@@ -20,10 +20,10 @@ intents.message_content = True
 
 #load and save needed variables
 de.load_dotenv()
-cookies = {'JSESSIONID':os.getenv('UNTIS_TOKEN')}
 url_prefix = os.getenv('SCHOOL_PREFIX')
 
 class UntisBot(discord.Client):
+    cookies = {'JSESSIONID':os.getenv('UNTIS_TOKEN')}
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
 
@@ -32,14 +32,16 @@ class UntisBot(discord.Client):
         if(message.content == "!hw"):
             #request url
             url = url_prefix+ 'WebUntis/api/homeworks/lessons?startDate=20260301&endDate=20260331' 
-            r = requests.get(url,cookies=cookies)
+            r = requests.get(url,cookies=self.cookies)
 
             #try because cookie might be expired
             try:
                 await self.send_homework(r,channel)
             except Exception as e:
                 #if expired generate new cookie
-                self.getcookie()
+                capturedCookie = self.getcookie()
+                new_cookie = {'JSESSIONID' : capturedCookie['value']}
+                r = requests.get(url,cookies=new_cookie)
                 await self.send_homework(r,channel)
 
     async def send_homework(self,r,channel):
@@ -55,23 +57,35 @@ class UntisBot(discord.Client):
     def getcookie(self):
         driver = webdriver.Firefox(options=options)
         driver.get(url_prefix+'WebUntis/#/basic/login')
+        
+        #get credentials from env
+        UN = os.getenv('UNTIS_UN')
+        PW = os.getenv('UNTIS_PASS')
+        
         #click login button
         driver.find_element(By.CSS_SELECTOR, ".redesigned-button.mt-1").click()
         time.sleep(3)
 
-        #get input boxes for username and password
-        username = driver.find_element(By.CSS_SELECTOR, ".redesigned-button.mt-1").click()
-        password = driver.find_element(By.CSS_SELECTOR, ".redesigned-button.mt-1").click()
+        #fill input box for username and click button element for first login
+        username = driver.find_element(By.ID, "username")
+        username.send_keys(UN)
+        driver.find_element(By.CSS_SELECTOR, ".pure-button.pure-button-red").click()
+        time.sleep(3)
         
-        #get credentials from env
-        creds = {process.getenv(UNTIS_UN),process.getenv(UNTIS_PASS)}
+        #get input box password
+        password = driver.find_element(By.ID, "password")
         
         #input
-        username.send_keys(creds[0])
-        password.send_keys(creds[1])
-
-        time.sleep(3)
-        print(driver.page_source)
+        password.send_keys(PW)
+        
+        #submit and wait
+        driver.find_element(By.CSS_SELECTOR, ".pure-button.pure-button-red").click()
+        time.sleep(6)
+        #return the cookie of that page
+        driver.get(url_prefix+'WebUntis')
+        cookie = driver.get_cookie('JSESSIONID')
+        print(cookie)
+        return cookie
 
 UB = UntisBot(intents = intents)
 UB.run(os.getenv('DISCORD_TOKEN'))
