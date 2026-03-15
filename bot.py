@@ -13,7 +13,7 @@ import pickle
 #set options for selenium browser
 options = Options()
 options.binary = r"C:\Users\Marwan\Desktop\Firefox.exe"
-#options.headless = True
+options.headless = True
 
 #set intents for discord bot
 intents = discord.Intents.default()
@@ -24,7 +24,7 @@ de.load_dotenv()
 url_prefix = os.getenv('SCHOOL_PREFIX')
 
 class UntisBot(discord.Client):
-    cookies = {'JSESSIONID':os.getenv('UNTIS_TOKEN')}
+    cookies = {'JSESSIONID':'helo'}
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
 
