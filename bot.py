@@ -8,6 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import time
 from selenium.webdriver.firefox.options import Options
+import pickle
 
 #set options for selenium browser
 options = Options()
@@ -30,6 +31,8 @@ class UntisBot(discord.Client):
     async def on_message(self, message):
         channel = message.channel
         if(message.content == "!hw"):
+
+            #get current date and calculate date in 3 months
             #request url
             url = url_prefix+ 'WebUntis/api/homeworks/lessons?startDate=20260301&endDate=20260331' 
             r = requests.get(url,cookies=self.cookies)
@@ -45,6 +48,7 @@ class UntisBot(discord.Client):
                 await self.send_homework(r,channel)
 
     async def send_homework(self,r,channel):
+        print(r)
         #parse data
         data = r.json()
         homeworks = data['data']['homeworks']
@@ -81,10 +85,13 @@ class UntisBot(discord.Client):
         #submit and wait
         driver.find_element(By.CSS_SELECTOR, ".pure-button.pure-button-red").click()
         time.sleep(6)
+
         #return the cookie of that page
         driver.get(url_prefix+'WebUntis')
         cookie = driver.get_cookie('JSESSIONID')
         print(cookie)
+        time.sleep(5)
+        driver.quit()
         return cookie
 
 UB = UntisBot(intents = intents)
