@@ -3,6 +3,7 @@ import dotenv as de
 import os
 import requests
 import json
+import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -13,7 +14,7 @@ import pickle
 #set options for selenium browser
 options = Options()
 options.binary = r"C:\Users\Marwan\Desktop\Firefox.exe"
-options.headless = True
+#options.headless = True
 
 #set intents for discord bot
 intents = discord.Intents.default()
@@ -34,7 +35,7 @@ class UntisBot(discord.Client):
 
             #get current date and calculate date in 3 months
             #request url
-            url = url_prefix+ 'WebUntis/api/homeworks/lessons?startDate=20260301&endDate=20260331' 
+            url = url_prefix+ 'WebUntis/api/homeworks/lessons?startDate=20260300&endDate=20260331' 
             r = requests.get(url,cookies=self.cookies)
 
             #try because cookie might be expired
@@ -53,11 +54,26 @@ class UntisBot(discord.Client):
         #parse data
         data = r.json()
         homeworks = data['data']['homeworks']
+        
+        #get current year in same format
+        cdate = datetime.datetime.now()
+        formatted_cdate = str(cdate.year) 
+        if len(str(cdate.month))==1:
+            formatted_cdate+='0'
+        formatted_cdate+= str(cdate.month) 
+        if len(str(cdate.day))==1:
+            formatted_cdate+='0'
+        formatted_cdate+= str(cdate.day)
+        print(formatted_cdate)
 
         #loop for every homework
         for homework in homeworks:
-            #send homework into same channel
-            await channel.send(homework['text'])
+            
+            #check if homewoirk is yet to come
+            if(homework['dueDate']>= int(formatted_cdate)):
+                #send homework into same channel
+                await channel.send(homework['text'] + " "+ str(homework['dueDate']))
+            
     
     def getcookie(self):
         driver = webdriver.Firefox(options=options)
@@ -85,7 +101,7 @@ class UntisBot(discord.Client):
         
         #submit and wait
         driver.find_element(By.CSS_SELECTOR, ".pure-button.pure-button-red").click()
-        time.sleep(2.5)
+        time.sleep(4)
 
         #return the cookie of that page
         driver.get(url_prefix+'WebUntis')
