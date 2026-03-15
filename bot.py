@@ -44,6 +44,7 @@ class UntisBot(discord.Client):
                 #if expired generate new cookie
                 capturedCookie = self.getcookie()
                 new_cookie = {'JSESSIONID' : capturedCookie['value']}
+                self.cookies = new_cookie
                 r = requests.get(url,cookies=new_cookie)
                 await self.send_homework(r,channel)
 
