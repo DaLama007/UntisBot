@@ -69,13 +69,13 @@ class UntisBot(discord.Client):
         
         #click login button
         driver.find_element(By.CSS_SELECTOR, ".redesigned-button.mt-1").click()
-        time.sleep(3)
+        time.sleep(1)
 
         #fill input box for username and click button element for first login
         username = driver.find_element(By.ID, "username")
         username.send_keys(UN)
         driver.find_element(By.CSS_SELECTOR, ".pure-button.pure-button-red").click()
-        time.sleep(3)
+        time.sleep(1)
         
         #get input box password
         password = driver.find_element(By.ID, "password")
@@ -85,7 +85,7 @@ class UntisBot(discord.Client):
         
         #submit and wait
         driver.find_element(By.CSS_SELECTOR, ".pure-button.pure-button-red").click()
-        time.sleep(6)
+        time.sleep(2.5)
 
         #return the cookie of that page
         driver.get(url_prefix+'WebUntis')
