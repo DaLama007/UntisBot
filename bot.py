@@ -9,7 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import time
 from selenium.webdriver.firefox.options import Options
-import pickle
+from table import DiscordEmbedTable 
 
 #set options for selenium browser
 options = Options()
@@ -67,13 +67,15 @@ class UntisBot(discord.Client):
         print(formatted_cdate)
 
         #loop for every homework
+        valid_homework = []
+        table = DiscordEmbedTable({'titles':['Day','Homework'],"padding":2})
         for homework in homeworks:
-            
-            #check if homewoirk is yet to come
+            #check if homework is yet to come
             if(homework['dueDate']>= int(formatted_cdate)):
                 #send homework into same channel
-                await channel.send(homework['text'] + " "+ str(homework['dueDate']))
-            
+                #valid_homework.append([homework["text"], int(homework["dueDate"]])
+                table.add_row([homework["text"], str(homework["dueDate"])])
+                await channel.send(table.to_string())
     
     def getcookie(self):
         driver = webdriver.Firefox(options=options)
