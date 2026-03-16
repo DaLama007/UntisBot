@@ -14,7 +14,7 @@ from table import DiscordEmbedTable
 #set options for selenium browser
 options = Options()
 options.binary = r"C:\Users\Marwan\Desktop\Firefox.exe"
-#options.headless = True
+options.headless = True
 
 #set intents for discord bot
 intents = discord.Intents.default()
