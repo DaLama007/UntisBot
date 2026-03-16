@@ -48,43 +48,52 @@ class UntisBot(discord.Client):
                 self.cookies = new_cookie
                 r = requests.get(url,cookies=new_cookie)
                 await self.send_homework(r,channel)
-
-    async def send_homework(self,r,channel):
-        print(r)
-        #parse data
+    
+    async def send_homework(self, r, channel):
+        # Parse data
         data = r.json()
         homeworks = data['data']['homeworks']
-        
-        #get current year in same format
-        cdate = datetime.datetime.now()
-        formatted_cdate = str(cdate.year) 
-        if len(str(cdate.month))==1:
-            formatted_cdate+='0'
-        formatted_cdate+= str(cdate.month) 
-        if len(str(cdate.day))==1:
-            formatted_cdate+='0'
-        formatted_cdate+= str(cdate.day)
-        print(formatted_cdate)
 
-        #loop for every homework
-        valid_homework = []
-        table = DiscordEmbedTable({'titles':['Day','Homework'],"padding":2})
-        for homework in homeworks:
-            #check if homework is yet to come
-            if(homework['dueDate']>= int(formatted_cdate)):
-                #send homework into same channel
-                #valid_homework.append([homework["text"], int(homework["dueDate"]])
-                table.add_row([homework["text"], str(homework["dueDate"])])
-                await channel.send(table.to_string())
-    
+        # Convert dueDate from int (YYYYMMDD) to datetime objects and sort
+        hw_list = []
+        for hw in homeworks:
+            due_date_int = hw['dueDate']
+            year = due_date_int // 10000
+            month = (due_date_int % 10000) // 100
+            day = due_date_int % 100
+            due_date = datetime.date(year, month, day)
+
+            # Only keep homework from today onward
+            if due_date >= datetime.date.today():
+                hw_list.append({
+                'text': hw['text'],
+                'due_date': due_date
+                })
+
+        # Sort by due date
+        hw_list.sort(key=lambda x: x['due_date'])
+
+        # Create table
+        table = DiscordEmbedTable({'titles': ['Day', 'Homework'], "padding": 2})
+
+        for hw in hw_list:
+        # Convert due_date to weekday string
+            day_name = hw['due_date'].strftime("%A")  # Monday, Tuesday, etc.
+            table.add_row([day_name, hw['text']])
+
+        if table.has_rows():
+            await channel.send(table.to_string())
+        else:
+            await channel.send("No upcoming homework!")
+
     def getcookie(self):
         driver = webdriver.Firefox(options=options)
         driver.get(url_prefix+'WebUntis/#/basic/login')
-        
+
         #get credentials from env
         UN = os.getenv('UNTIS_UN')
         PW = os.getenv('UNTIS_PASS')
-        
+
         #click login button
         driver.find_element(By.CSS_SELECTOR, ".redesigned-button.mt-1").click()
         time.sleep(1)
@@ -94,13 +103,13 @@ class UntisBot(discord.Client):
         username.send_keys(UN)
         driver.find_element(By.CSS_SELECTOR, ".pure-button.pure-button-red").click()
         time.sleep(1)
-        
+
         #get input box password
         password = driver.find_element(By.ID, "password")
-        
+
         #input
         password.send_keys(PW)
-        
+
         #submit and wait
         driver.find_element(By.CSS_SELECTOR, ".pure-button.pure-button-red").click()
         time.sleep(4)
